@@ -1,8 +1,19 @@
 # ================================
 # CONFIGURAÇÕES
 # ================================
-$logPath = "C:\Logs\limpeza_temp_$(Get-Date -Format 'yyyy-MM-dd_HH-mm').log"
-$dias = 6
+$usuario = $env:USERNAME
+$maquina = $env:COMPUTERNAME
+$data = Get-Date -Format "yyyy-MM-dd_HH-mm"
+
+$logDir = "C:\Logs\$maquina"
+$logPath = "$logDir\limpeza_$data.log"
+
+# Criar pasta de log se não existir
+if (!(Test-Path $logDir)) {
+    New-Item -ItemType Directory -Path $logDir -Force | Out-Null
+}
+
+$dias = 7
 $totalLiberado = 0
 $inicioExecucao = Get-Date
 
@@ -19,7 +30,8 @@ function Escrever-Log {
     param ($mensagem)
 
     $data = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    "$data - $mensagem" | Out-File -FilePath $logPath -Append -Encoding utf8
+    Add-Content -Path $logPath -Value "$data - $mensagem"
+    Add-Content -Path $logPath -Value ""  # linha em branco
 }
 
 # ================================
@@ -34,7 +46,7 @@ function Converter-Tamanho {
     else { return "$bytes Bytes" }
 }
 
-Escrever-Log "=== INÍCIO DA LIMPEZA ==="
+Escrever-Log "=== INICIO DA LIMPEZA ==="
 
 # ================================
 # FUNÇÃO PADRÃO DE LIMPEZA
@@ -65,7 +77,7 @@ function Limpar-Pasta {
                 Escrever-Log "$descricao - Arquivos removidos: $quantidade | Liberado: $(Converter-Tamanho $tamanho)"
             }
         } else {
-            Escrever-Log "$descricao - Caminho não encontrado"
+            Escrever-Log "$descricao - Caminho nao encontrado"
         }
     }
     catch {
@@ -76,7 +88,7 @@ function Limpar-Pasta {
 # ================================
 # TEMP USUÁRIO ATUAL
 # ================================
-Limpar-Pasta $env:TEMP "Temp usuário atual"
+Limpar-Pasta $env:TEMP "Temp usuario atual"
 
 # ================================
 # TEMP TODOS USUÁRIOS
@@ -87,10 +99,10 @@ Get-ChildItem "C:\Users" -Directory | Where-Object {
 } | ForEach-Object {
     try {
         $tempPath = "$($_.FullName)\AppData\Local\Temp"
-        Limpar-Pasta $tempPath "Temp usuário ($($_.Name))"
+        Limpar-Pasta $tempPath "Temp usuario ($($_.Name))"
     }
     catch {
-        Escrever-Log "Erro ao acessar usuário $($_.Name)"
+        Escrever-Log "Erro ao acessar usuario $($_.Name)"
     }
 }
 
@@ -184,11 +196,21 @@ catch {
 # LIXEIRA
 # ================================
 try {
-    Clear-RecycleBin -Force -ErrorAction SilentlyContinue
-    Escrever-Log "Lixeira limpa"
+    Escrever-Log "Iniciando limpeza da lixeira (modo forçado)"
+
+    Get-ChildItem "C:\$Recycle.Bin" -Force -ErrorAction SilentlyContinue | ForEach-Object {
+        try {
+            Remove-Item $_.FullName -Recurse -Force -ErrorAction SilentlyContinue
+        }
+        catch {
+            Escrever-Log "Erro ao remover item da lixeira: $($_.FullName)"
+        }
+    }
+
+    Escrever-Log "Lixeira limpa (ou ja estava vazia)"
 }
 catch {
-    Escrever-Log "Erro na lixeira"
+    Escrever-Log "Erro geral na limpeza da lixeira"
 }
 
 # ================================
@@ -198,5 +220,5 @@ $fimExecucao = Get-Date
 $tempoExecucao = ($fimExecucao - $inicioExecucao).TotalSeconds
 
 Escrever-Log "TOTAL LIBERADO: $(Converter-Tamanho $totalLiberado)"
-Escrever-Log "TEMPO DE EXECUÇÃO: $([math]::Round($tempoExecucao,2)) segundos"
+Escrever-Log "TEMPO DE EXECUCAO: $([math]::Round($tempoExecucao,2)) segundos"
 Escrever-Log "=== FIM DA LIMPEZA ==="
