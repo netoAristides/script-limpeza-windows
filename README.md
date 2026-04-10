@@ -1,4 +1,4 @@
-# Windows Cleanup Script (PowerShell)
+# Windows Cleanup (PowerShell)
 
 Script em PowerShell para limpeza automatizada de arquivos temporários e resíduos do sistema Windows, com geração de logs detalhados.
 
