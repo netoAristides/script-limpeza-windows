@@ -1,4 +1,15 @@
 # ================================
+# VERIFICAR ADMIN
+# ================================
+if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
+    [Security.Principal.WindowsBuiltinRole]::Administrator)) {
+
+    Write-Host "Execute este script como Administrador!" -ForegroundColor Red
+    Pause
+    exit
+}
+
+# ================================
 # CONFIGURAÇÕES
 # ================================
 $usuario = $env:USERNAME
