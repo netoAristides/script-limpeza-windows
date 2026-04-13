@@ -28,12 +28,6 @@ $dias = 7
 $totalLiberado = 0
 $inicioExecucao = Get-Date
 
-# Criar pasta de log se não existir
-if (!(Test-Path "C:\Logs")) {
-    New-Item -ItemType Directory -Path "C:\Logs" | Out-Null
-}
-
-
 # ================================
 # FUNÇÃO DE LOG
 # ================================
@@ -80,7 +74,7 @@ function Limpar-Pasta {
 
             $arquivos | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
 
-            $totalLiberado += $tamanho
+            $script:totalLiberado += $tamanho
 
             if ($tamanho -eq 0) {
                 Escrever-Log "$descricao - Nenhum arquivo para limpar"
@@ -143,7 +137,7 @@ try {
 
         $arquivos | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
 
-        $totalLiberado += $tamanho
+        $script:totalLiberado += $tamanho
 
         if ($tamanho -eq 0) {
             Escrever-Log "Windows Update - Nenhum arquivo para limpar"
@@ -164,7 +158,15 @@ finally {
 # ================================
 # LOGS WINDOWS
 # ================================
-Limpar-Pasta "C:\Windows\Logs" "Logs do Windows"
+$logsPaths = @(
+    "C:\Windows\Logs\CBS",
+    "C:\Windows\Logs\DISM",
+    "C:\Windows\Logs\MoSetup"
+)
+
+foreach ($logPathItem in $logsPaths) {
+    Limpar-Pasta $logPathItem "Logs do Windows ($logPathItem)"
+}
 
 # ================================
 # MINIDUMP
@@ -179,17 +181,19 @@ try {
     foreach ($path in $paths) {
         if (Test-Path $path -ErrorAction SilentlyContinue) {
 
-            $arquivos = Get-ChildItem $path -Recurse -Force -ErrorAction SilentlyContinue
+            $arquivos = Get-ChildItem $path -Recurse -Force -ErrorAction SilentlyContinue |
+                Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-$dias) }
+
             $tamanho = ($arquivos | Measure-Object -Property Length -Sum).Sum
             if (-not $tamanho) { $tamanho = 0 }
 
             $quantidade = ($arquivos | Measure-Object).Count
 
-            Remove-Item $path -Recurse -Force -ErrorAction SilentlyContinue
+            $arquivos | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
 
             $tamanhoTotal += $tamanho
             $quantidadeTotal += $quantidade
-            $totalLiberado += $tamanho
+            $script:totalLiberado += $tamanho
         }
     }
 
@@ -209,16 +213,34 @@ catch {
 try {
     Escrever-Log "Iniciando limpeza da lixeira (modo forçado)"
 
-    Get-ChildItem "C:\$Recycle.Bin" -Force -ErrorAction SilentlyContinue | ForEach-Object {
-        try {
-            Remove-Item $_.FullName -Recurse -Force -ErrorAction SilentlyContinue
+    $lixeiraPath = "C:\$Recycle.Bin"
+
+    if (Test-Path $lixeiraPath) {
+
+        $arquivos = Get-ChildItem $lixeiraPath -Recurse -Force -ErrorAction SilentlyContinue
+
+        $tamanho = ($arquivos | Measure-Object -Property Length -Sum).Sum
+        if (-not $tamanho) { $tamanho = 0 }
+
+        $quantidade = ($arquivos | Measure-Object).Count
+
+        foreach ($item in $arquivos) {
+            try {
+                Remove-Item $item.FullName -Recurse -Force -ErrorAction SilentlyContinue
+            }
+            catch {
+                Escrever-Log "Erro ao remover item da lixeira: $($item.FullName)"
+            }
         }
-        catch {
-            Escrever-Log "Erro ao remover item da lixeira: $($_.FullName)"
+
+        $script:totalLiberado += $tamanho
+
+        if ($tamanho -eq 0) {
+            Escrever-Log "Lixeira - Nenhum arquivo para limpar"
+        } else {
+            Escrever-Log "Lixeira - Arquivos removidos: $quantidade | Liberado: $(Converter-Tamanho $tamanho)"
         }
     }
-
-    Escrever-Log "Lixeira limpa (ou ja estava vazia)"
 }
 catch {
     Escrever-Log "Erro geral na limpeza da lixeira"
@@ -233,3 +255,11 @@ $tempoExecucao = ($fimExecucao - $inicioExecucao).TotalSeconds
 Escrever-Log "TOTAL LIBERADO: $(Converter-Tamanho $totalLiberado)"
 Escrever-Log "TEMPO DE EXECUCAO: $([math]::Round($tempoExecucao,2)) segundos"
 Escrever-Log "=== FIM DA LIMPEZA ==="
+Write-Host ""
+Write-Host "=====================================" -ForegroundColor Cyan
+Write-Host " LIMPEZA FINALIZADA " -ForegroundColor Green
+Write-Host "=====================================" -ForegroundColor Cyan
+Write-Host "Espaço liberado: $(Converter-Tamanho $totalLiberado)" -ForegroundColor Yellow
+Write-Host "Tempo de execução: $([math]::Round($tempoExecucao,2)) segundos" -ForegroundColor Yellow
+Write-Host "Log salvo em: $logPath" -ForegroundColor Gray
+Write-Host "=====================================" -ForegroundColor Cyan

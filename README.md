@@ -67,7 +67,7 @@ O script percorre diretórios específicos do sistema e remove arquivos com base
 
 2. Execute o PowerShell como Administrador
 
-3. Vá até o diretório onde você salvou, exemplo: cd/ C:/arquivodelimpeza
+3. Vá até o diretório onde você salvou, exemplo: cd C:/arquivodelimpeza
 
 4. Rode o script:
 
@@ -92,6 +92,16 @@ Recomendado agendar via **Task Scheduler**:
 * O script remove arquivos permanentemente (sem confirmação)
 * Certifique-se de revisar antes de usar em ambiente produtivo
 * Alguns arquivos podem não ser removidos se estiverem em uso
+
+---
+
+## Diferenciais
+
+- Script seguro com verificação de privilégios administrativos
+- Tratamento de erros com try/catch
+- Cálculo detalhado de espaço liberado
+- Logs organizados por máquina e execução
+- Estrutura preparada para automação em ambiente corporativo
 
 ---
 
