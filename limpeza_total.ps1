@@ -187,7 +187,7 @@ catch {
 
 # LIXEIRA
 try {
-    Escrever-Log "Iniciando limpeza da lixeira (modo forçado)"
+    Escrever-Log "Iniciando limpeza da lixeira (modo forcado)"
 
     $lixeiraPath = "C:\$Recycle.Bin"
 
@@ -233,7 +233,7 @@ Write-Host ""
 Write-Host "=====================================" -ForegroundColor Cyan
 Write-Host " LIMPEZA FINALIZADA " -ForegroundColor Green
 Write-Host "=====================================" -ForegroundColor Cyan
-Write-Host "Espaço liberado: $(Converter-Tamanho $totalLiberado)" -ForegroundColor Yellow
-Write-Host "Tempo de execução: $([math]::Round($tempoExecucao,2)) segundos" -ForegroundColor Yellow
+Write-Host "Espaco liberado: $(Converter-Tamanho $totalLiberado)" -ForegroundColor Yellow
+Write-Host "Tempo de execucao: $([math]::Round($tempoExecucao,2)) segundos" -ForegroundColor Yellow
 Write-Host "Log salvo em: $logPath" -ForegroundColor Gray
 Write-Host "=====================================" -ForegroundColor Cyan
