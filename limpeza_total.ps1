@@ -1,6 +1,4 @@
-# ================================
 # VERIFICAR ADMIN
-# ================================
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
     [Security.Principal.WindowsBuiltinRole]::Administrator)) {
 
@@ -9,9 +7,7 @@ if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
     exit
 }
 
-# ================================
 # CONFIGURAÇÕES
-# ================================
 $usuario = $env:USERNAME
 $maquina = $env:COMPUTERNAME
 $data = Get-Date -Format "yyyy-MM-dd_HH-mm"
@@ -28,9 +24,7 @@ $dias = 7
 $totalLiberado = 0
 $inicioExecucao = Get-Date
 
-# ================================
 # FUNÇÃO DE LOG
-# ================================
 function Escrever-Log {
     param ($mensagem)
 
@@ -39,9 +33,7 @@ function Escrever-Log {
     Add-Content -Path $logPath -Value ""  # linha em branco
 }
 
-# ================================
 # FUNÇÃO PARA CONVERTER TAMANHO
-# ================================
 function Converter-Tamanho {
     param ($bytes)
 
@@ -53,9 +45,7 @@ function Converter-Tamanho {
 
 Escrever-Log "=== INICIO DA LIMPEZA ==="
 
-# ================================
 # FUNÇÃO PADRÃO DE LIMPEZA
-# ================================
 function Limpar-Pasta {
     param ($caminho, $descricao)
 
@@ -90,14 +80,10 @@ function Limpar-Pasta {
     }
 }
 
-# ================================
 # TEMP USUÁRIO ATUAL
-# ================================
 Limpar-Pasta $env:TEMP "Temp usuario atual"
 
-# ================================
 # TEMP TODOS USUÁRIOS
-# ================================
 Get-ChildItem "C:\Users" -Directory | Where-Object {
     $_.Name -notin @("Default", "Public", "All Users", "Default User") -and
     (Test-Path "$($_.FullName)\AppData\Local\Temp")
@@ -111,14 +97,10 @@ Get-ChildItem "C:\Users" -Directory | Where-Object {
     }
 }
 
-# ================================
 # TEMP WINDOWS
-# ================================
 Limpar-Pasta "C:\Windows\Temp" "Temp Windows"
 
-# ================================
 # WINDOWS UPDATE
-# ================================
 try {
     Escrever-Log "Iniciando: Windows Update"
 
@@ -155,9 +137,7 @@ finally {
     }
 }
 
-# ================================
 # LOGS WINDOWS
-# ================================
 $logsPaths = @(
     "C:\Windows\Logs\CBS",
     "C:\Windows\Logs\DISM",
@@ -168,9 +148,7 @@ foreach ($logPathItem in $logsPaths) {
     Limpar-Pasta $logPathItem "Logs do Windows ($logPathItem)"
 }
 
-# ================================
 # MINIDUMP
-# ================================
 try {
     Escrever-Log "Iniciando: Minidump"
 
@@ -207,9 +185,7 @@ catch {
     Escrever-Log "Erro no Minidump"
 }
 
-# ================================
 # LIXEIRA
-# ================================
 try {
     Escrever-Log "Iniciando limpeza da lixeira (modo forçado)"
 
@@ -246,9 +222,7 @@ catch {
     Escrever-Log "Erro geral na limpeza da lixeira"
 }
 
-# ================================
 # TOTAL FINAL
-# ================================
 $fimExecucao = Get-Date
 $tempoExecucao = ($fimExecucao - $inicioExecucao).TotalSeconds
 
